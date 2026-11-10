@@ -19,6 +19,9 @@ SEIF CUSTOM is a user-controlled personalization project for Android and desktop
 3. Choose **Load unpacked** and select the `extension` folder.
 4. Open a new tab.
 
+## Desktop phone simulator
+Open `extension/simulator.html` from the New Tab phone icon. It provides an interactive phone-shaped design preview with Home, Apps and Widgets pages; accent/background colors; card and wallpaper opacity; icon shapes; preview scale; image/video wallpapers; and editable app links. App icons open the configured official website or download page in a new tab. They do not install or run Android APKs in the simulator. Preferences and the preview wallpaper are stored locally in this browser.
+
 ## Android native starter
 The `android/` folder is an Android Studio project with a selectable Home/launcher activity, optional in-launcher app hiding/restoring, local media selection, live wallpaper playback for video and GIF, static image rendering, and a local AES-GCM encryption primitive. See [android/README.md](android/README.md) for build instructions and limitations.
 
