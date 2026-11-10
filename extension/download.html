@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101522"><title>SEIF CUSTOM — مركز التنزيل</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.download-page{width:min(820px,calc(100% - 32px));margin:7vh auto 60px}
+.download-head{text-align:center;margin-bottom:28px}.download-head h1{font-size:clamp(25px,5vw,38px);margin:8px 0}.download-head p{color:var(--muted);font-size:13px;line-height:1.9}
+.download-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.download-card{border:1px solid var(--line);border-radius:18px;background:var(--glass);backdrop-filter:blur(20px);padding:20px;display:flex;flex-direction:column;gap:12px;min-height:210px}
+.download-card .symbol{width:43px;height:43px;border-radius:13px;display:grid;place-items:center;background:rgba(174,190,255,.15);font-size:21px}
+.download-card h2{font-size:16px;margin:0}.download-card p{font-size:11px;line-height:1.8;color:var(--muted);margin:0;flex:1}
+.download-card a{display:block;text-align:center;text-decoration:none;border:1px solid var(--line);border-radius:10px;padding:11px;background:rgba(174,190,255,.14);color:var(--text);font-size:12px;font-weight:700}
+.download-card a.primary{background:var(--accent-custom);color:#111522;border-color:transparent}
+.download-note{margin:18px 0;padding:14px;border:1px solid var(--line);border-radius:13px;color:var(--muted);font-size:11px;line-height:1.9}
+.download-back{display:inline-block;color:var(--text);text-decoration:none;font-size:12px;margin-bottom:20px}
+</style></head>
+<body>
+<header class="topbar"><a class="brand" href="newtab.html"><span class="brand-mark">S</span><span class="brand-copy"><strong>SEIF CUSTOM</strong><small>PERSONAL DEVICE EXPERIENCE</small></span></a><a class="icon-button" href="newtab.html" aria-label="العودة">←</a></header>
+<main class="download-page">
+<section class="download-head"><p class="eyebrow">DOWNLOAD CENTER</p><h1>مركز تنزيل SEIF CUSTOM</h1><p>اختر النسخة المناسبة لجهازك. تنزيل Android APK منفصل عن ZIP الخاص بالمصدر وإضافة المتصفح.</p></section>
+<section class="download-grid">
+<article class="download-card"><div class="symbol">📱</div><h2>نسخة Android APK</h2><p>التطبيق الأصلي للهاتف. بعد إصدار أول نسخة موقعة/مبنية، ستجد هنا رابط APK المباشر من GitHub Releases.</p><a class="primary" href="https://github.com/seifjaballah77-eng/SEIF-CUSTOM/releases/latest/download/SEIF-CUSTOM-Android.apk">تنزيل أحدث APK</a></article>
+<article class="download-card"><div class="symbol">📦</div><h2>ملف المشروع ZIP</h2><p>تنزيل نسخة ZIP من ملفات المشروع على الفرع الرئيسي، تشمل ملفات Android والكمبيوتر والمستندات.</p><a href="https://github.com/seifjaballah77-eng/SEIF-CUSTOM/archive/refs/heads/main.zip">تنزيل ZIP للمشروع</a></article>
+<article class="download-card"><div class="symbol">🖥️</div><h2>إضافة المتصفح</h2><p>نزّل المصدر واستخرج الملف، ثم حمّل مجلد extension من صفحة الإضافات في متصفح Chromium.</p><a href="https://github.com/seifjaballah77-eng/SEIF-CUSTOM/archive/refs/heads/main.zip">تنزيل ملفات الإضافة ZIP</a></article>
+<article class="download-card"><div class="symbol">🧪</div><h2>نسخ الاختبار</h2><p>ملفات APK التجريبية تُنشر كـ GitHub Actions artifacts عند نجاح البناء، وقد تنتهي صلاحية تنزيلها وفق سياسة GitHub.</p><a href="https://github.com/seifjaballah77-eng/SEIF-CUSTOM/actions/workflows/android-build.yml">فتح سجل بناء Android</a></article>
+</section>
+<div class="download-note"><strong>تنبيه:</strong> رابط APK النهائي سيعمل بعد إنشاء أول إصدار Android عبر GitHub Actions. لا تثبّت ملفاً غير معروف المصدر، وراجع أذونات التطبيق قبل التثبيت. ZIP ليس ملف تثبيت Android؛ تثبيت الهاتف يحتاج APK.</div>
+</main></body></html>
