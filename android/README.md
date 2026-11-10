@@ -12,7 +12,7 @@ Open the `android/` folder in Android Studio. Install Android SDK 35 and JDK 17,
 - Resizable home-screen clock/date widget.
 - AES-256-GCM Android Keystore encryption primitive.
 
-## Privacy limits
+## SEIF Gesture Navigation\n- Optional accessibility service: short upward swipe from the bottom opens Recents; a longer upward swipe invokes Home; inward swipes from enabled left/right edges invoke Back.\n- Holding the bottom indicator for 3 seconds attempts to launch the configured voice assistant.\n- User must explicitly enable the service in Android Accessibility settings. It declares `canRetrieveWindowContent=false` and does not inspect screen text.\n- Gesture zones may conflict with OEM/system edge gestures. Disable the service from Accessibility settings if needed. Physical-device testing is still required.\n\n## Privacy limits
 The Hidden tab only removes selected apps from the SEIF CUSTOM launcher's visible app list. It does not hide them from Android Settings, other launchers, or Digital Wellbeing/Screen Time usage statistics. A normal third-party launcher cannot erase or falsify system usage records. Android Private Space, if available on the device, is configured and managed by Android itself.
 
 ## Build and downloads
