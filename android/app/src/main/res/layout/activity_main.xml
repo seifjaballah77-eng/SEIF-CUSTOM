@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#101522" android:fillViewport="true">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SEIF CUSTOM" android:textColor="#F4F6FF" android:textSize="23sp" android:textStyle="bold"/>
+<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="PERSONAL DEVICE EXPERIENCE" android:textColor="#AAB7D8" android:textSize="10sp"/>
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:padding="16dp" android:background="@drawable/panel_bg" android:text="خلفيات هاتفك" android:textColor="#FFFFFF" android:textSize="18sp" android:textStyle="bold"/>
+<TextView android:id="@+id/selectedFile" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="لم تختر خلفية بعد" android:textColor="#B8C4E0" android:textSize="13sp"/>
+<Button android:id="@+id/chooseWallpaper" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="12dp" android:background="@drawable/button_bg" android:text="اختيار صورة أو فيديو من الهاتف" android:textColor="#FFFFFF"/>
+<TextView android:id="@+id/opacityLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="وضوح الخلفية: 100%" android:textColor="#E6EAF7" android:textSize="13sp"/>
+<SeekBar android:id="@+id/opacitySeek" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="85" android:progress="85"/>
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="منزلق الوضوح يؤثر في عرض GIF. شفافية الفيديو تختلف حسب دعم الجهاز." android:textColor="#91A0C2" android:textSize="11sp"/>
+<Button android:id="@+id/applyWallpaper" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="12dp" android:background="@drawable/button_bg" android:text="معاينة وتطبيق الخلفية الحية" android:textColor="#FFFFFF"/>
+<Button android:id="@+id/removeWallpaper" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="8dp" android:background="@drawable/panel_bg" android:text="إزالة اختيار الخلفية" android:textColor="#F1B8C0"/>
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:padding="16dp" android:background="@drawable/panel_bg" android:text="مشغّل التطبيقات" android:textColor="#FFFFFF" android:textSize="18sp" android:textStyle="bold"/>
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="اجعل SEIF CUSTOM الشاشة الرئيسية الافتراضية من إعدادات الهاتف. الإخفاء اختياري ويمكن التراجع عنه." android:textColor="#AAB7D8" android:textSize="12sp"/>
+<Button android:id="@+id/showHidden" android:layout_width="match_parent" android:layout_height="46dp" android:layout_marginTop="8dp" android:background="@drawable/panel_bg" android:text="عرض التطبيقات المخفية / استعادتها" android:textColor="#E6EAF7"/>
+<LinearLayout android:id="@+id/appList" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="10dp"/>
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="كل التغييرات اختيارية. لا يتم تفعيل توفير الطاقة أو تبديل النهار والليل تلقائياً." android:textColor="#8391B0" android:textSize="11sp"/>
+</LinearLayout></ScrollView>
