@@ -37,7 +37,7 @@ class SeifKeyboardService : InputMethodService() {
             root.addView(line)
         }
         val bottom = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER }
-        listOf("🌐", if (symbols) "ABC" else "?123", "،", "مسافة", "⌫", "↵").forEach { bottom.addView(keyButton(it)) }
+        listOf("لغة", if (symbols) "ABC" else "?123", "،", "مسافة", "⌫", "↵").forEach { bottom.addView(keyButton(it)) }
         root.addView(bottom)
     }
 
@@ -57,12 +57,12 @@ class SeifKeyboardService : InputMethodService() {
     private fun press(key: String) {
         val connection = currentInputConnection ?: return
         when (key) {
-            "🌐" -> { language = 1 - language; symbols = false; rebuild() }
+            "لغة" -> { language = 1 - language; symbols = false; rebuild() }
             "?123" -> { symbols = true; rebuild() }
             "ABC" -> { symbols = false; rebuild() }
             "مسافة" -> connection.commitText(" ", 1)
             "⌫" -> connection.deleteSurroundingText(1, 0)
-            "↵" -> connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
+            "↵" -> { connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)); connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)) }
             "،" -> connection.commitText(if (language == 0) "،" else ",", 1)
             else -> connection.commitText(key, 1)
         }
