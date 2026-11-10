@@ -24,10 +24,17 @@ class SeifGestureNavigationService : AccessibilityService() {
     private var bottom: GestureZone? = null
     private var left: GestureZone? = null
     private var right: GestureZone? = null
+    private val preferenceListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "nav_left_enabled" || key == "nav_right_enabled") installZones()
+        if (key == "nav_bottom_shape" || key == "nav_side_shape" || key == "nav_color") {
+            listOfNotNull(bottom, left, right).forEach { it.invalidate() }
+        }
+    }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         wm = getSystemService(WINDOW_SERVICE) as WindowManager
+        getSharedPreferences("seif-custom", MODE_PRIVATE).registerOnSharedPreferenceChangeListener(preferenceListener)
         installZones()
     }
 
@@ -35,6 +42,7 @@ class SeifGestureNavigationService : AccessibilityService() {
     override fun onInterrupt() {}
 
     override fun onDestroy() {
+        getSharedPreferences("seif-custom", MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(preferenceListener)
         removeZones()
         super.onDestroy()
     }
