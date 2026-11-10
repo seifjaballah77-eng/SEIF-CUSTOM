@@ -1,0 +1,13 @@
+SEIF CUSTOM — Chrome extension installation
+
+1. Download SEIF-CUSTOM-Chrome.zip from the SEIF CUSTOM Download Center.
+2. Extract the ZIP to a permanent folder on your computer.
+3. Open Chrome and visit chrome://extensions
+4. Turn on Developer mode.
+5. Click "Load unpacked".
+6. Select the extracted folder that contains manifest.json.
+7. Open a new tab to use SEIF CUSTOM.
+
+To update: download and extract the latest ZIP again, then use Reload on the extension card or remove the old unpacked copy and load the new folder.
+
+This ZIP contains only the Chrome extension files. It does not contain the Android APK or the full source repository.
