@@ -14,7 +14,7 @@ class SeifKeyboardService : InputMethodService() {
     private var symbols = false
     private val arabic = listOf("ض ص ث ق ف غ ع ه خ ح ج د", "ش س ي ب ل ا ت ن م ك ط", "ئ ء ؤ ر لا ى ة و ز ظ")
     private val english = listOf("q w e r t y u i o p", "a s d f g h j k l", "z x c v b n m")
-    private val symbolRows = listOf("1 2 3 4 5 6 7 8 9 0", "@ # $ % & - + ( ) /", "* \" ' : ; ! ?")
+    private val symbolRows = listOf("1 2 3 4 5 6 7 8 9 0", "@ # € % & - + ( ) /", "* \" ' : ; ! ?")
     private val root by lazy { LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(3), dp(4), dp(3), dp(4)); setBackgroundColor(0xFF171F30.toInt()) } }
 
     override fun onCreateInputView(): View {
