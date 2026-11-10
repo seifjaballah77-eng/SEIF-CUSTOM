@@ -1,0 +1,7 @@
+{
+  "manifest_version": 3,
+  "name": "SEIF CUSTOM — New Tab",
+  "version": "0.1.0",
+  "description": "تبويب جديد بسيط وشفاف بخلفيات يختارها المستخدم.",
+  "chrome_url_overrides": { "newtab": "newtab.html" }
+}

@@ -1,78 +1,30 @@
 # SEIF CUSTOM
 ### PERSONAL DEVICE EXPERIENCE
 
-SEIF CUSTOM is a cross-device personalization project focused on giving users control over the appearance and organization of their Android device and desktop browser/Windows workspace.
+SEIF CUSTOM is a user-controlled personalization project for Android and desktop browsing. The rule is simple: **suggest, never force**. The user decides whether to change appearance, move or hide items, enable motion, or use optional automation.
 
-> Project status: foundation and requirements phase. Features described here are planned, not yet implemented.
+## First working web milestone
+The repository now contains a first browser New Tab implementation in `extension/`:
+- Minimal Arabic RTL layout, compact translucent controls, clock/date and web search.
+- Add/remove up to 20 custom shortcuts.
+- Manual light/dark toggle and adjustable panel transparency.
+- Choose a local image or MP4/WebM/OGG video as the New Tab background.
+- Video loops muted by default; motion can be paused manually.
+- Wallpaper files and preferences stay in local browser storage. Settings can be imported/exported (wallpaper file itself is not included in settings backup).
+- No automatic power-saving changes and no automatic light/dark switching.
 
-## Product goals
+## Run it
+1. Open the repository's `extension/` folder.
+2. In a Chromium-based browser, open its extensions page and enable Developer mode.
+3. Choose **Load unpacked** and select the `extension` folder.
+4. Open a new tab.
+5. For a GitHub Pages preview, enable Pages for the `main` branch root, then visit the repository's Pages URL; the root page redirects to `extension/newtab.html`.
 
-- A highly configurable Android home experience and customization studio.
-- A desktop browser extension for a customizable new-tab experience.
-- A possible lightweight Windows companion where browser extensions cannot provide the required capabilities.
-- A shared visual system for themes, colors, shapes, icons, widgets, and saved designs.
-- A private vault for protected photos and supported app-hiding workflows.
+## Complete project requirements
+See [docs/MASTER-PLAN.md](docs/MASTER-PLAN.md) for the full Android, desktop, icon studio, wallpaper library, widgets, custom keyboard, encrypted vault, biometrics, recovery, optional security actions, and compatibility principles. See [docs/TESTING.md](docs/TESTING.md) for manual checks and known limits.
 
-## Planned capabilities
-
-### Personalization studio
-- Live preview before applying a design.
-- Ready-made themes that can be edited, plus a free-form builder.
-- Per-element control of colors, gradients, opacity, borders, shadows, corner shapes, spacing, and motion.
-- Large color palette for buttons and interface elements.
-- Wallpaper-aware app-label contrast, considering the area immediately behind each label.
-- Theme save, duplicate, import, export, and sharing.
-
-### Apps and icons
-- Organized icon library with accurate app/package matching.
-- Search and category filters.
-- Multiple icon shapes and custom image import.
-- Optional suitable emoji beside app names.
-- Per-device capability checks; never report an icon change as successful unless it was actually applied.
-
-### Android experience
-- Custom home/launcher experience, app organization, folders, shortcuts, and widgets.
-- Custom keyboard concept with readable key sizes and high-contrast text as non-negotiable requirements.
-- Supported system appearance controls, with clear disclosure where Android or the device manufacturer blocks changes.
-- Optional automatic light/dark schedules.
-
-### Private vault and security
-- Encrypted local storage for photos placed in the vault.
-- Supported hiding of apps from the SEIF CUSTOM home experience.
-- Biometric unlock using Android-supported fingerprint and face authentication, with device capability checks.
-- Password and recovery-key fallback.
-- Failed-attempt logging, configurable lockout, and security notifications.
-- Any attempt-photo feature must follow Android camera permission and foreground-use rules. No covert background photography; local storage by default.
-
-### Desktop
-- Browser extension for new-tab layout, wallpaper, shortcuts, widgets, and themes.
-- Lightweight Windows companion only for capabilities that cannot be delivered reliably by an extension.
-- Compatibility testing for Chromium-based browsers, including older supported environments.
-
-## Platform and security principles
-
-1. Do not promise unrestricted modification of Android system UI. Status bar, notification shade, lock screen, Settings, and manufacturer-specific controls may be restricted.
-2. Separate launcher-level customization from system-level customization.
-3. Do not require root for core functionality. Any root-dependent enhancement must be optional, isolated, and clearly explained.
-4. Use platform biometric APIs. Face authentication security varies by device; use only modalities the OS reports as suitable for the requested security level.
-5. Do not store passwords or biometric data in plaintext. Prefer OS-managed authentication and hardware-backed key storage where available.
-6. Vault content must be encrypted at rest; hiding a gallery item alone is not secure storage.
-7. No hidden camera capture, covert monitoring, or uploading of security photos without explicit consent.
-8. Respect image licenses and source terms for wallpaper assets.
-
-## Delivery roadmap
-
-1. Requirements and platform capability matrix.
-2. Repository architecture and design system.
-3. Interactive design studio and live device preview.
-4. Theme, color, shape, and icon engine.
-5. Android launcher foundation and widgets.
-6. Vault, biometric authentication, recovery, and lockout.
-7. Wallpaper library and scheduled appearance.
-8. Browser extension.
-9. Windows companion feasibility and implementation.
-10. Device/browser compatibility, accessibility, security, and performance testing.
-
-## Current implementation status
-
-This repository is being initialized. No production feature should be considered available until it has been implemented and tested on the target platform.
+## Important implementation boundaries
+- The browser extension customizes the New Tab page only. It cannot restyle protected browser pages or the Windows shell.
+- Android system surfaces such as the notification shade, lock screen, and Settings are restricted. The future Android app will distinguish its own launcher UI from system UI.
+- The Android launcher, encrypted vault, biometric flows, keyboard, native widgets, and Windows companion are **planned, not implemented** in this milestone.
+- Do not treat a feature as complete until it has been tested on the target browser/device.
