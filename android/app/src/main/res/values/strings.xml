@@ -1,2 +1,3 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources><string name="app_name">SEIF CUSTOM</string><string name="wallpaper_description">خلفية حية يختارها المستخدم من ملفاته</string></resources>
+<resources><string name="app_name">SEIF CUSTOM</string><string name="wallpaper_description">خلفية حية يختارها المستخدم من ملفاته</string> <string name="accessibility_service_description">تنفيذ إيماءات SEIF للتنقل: رجوع، الرئيسية، التطبيقات الأخيرة، واستدعاء المساعد بالضغط المطوّل. لا تقرأ محتوى الشاشة.</string>
+</resources>
