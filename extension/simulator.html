@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101522">
+<title>SEIF CUSTOM — محاكي الهاتف</title>
+<link rel="stylesheet" href="simulator.css">
+</head>
+<body>
+<header class="sim-top">
+<a class="brand" href="newtab.html"><span class="brand-mark">S</span><span><b>SEIF CUSTOM</b><small>محاكي الهاتف</small></span></a>
+<div class="top-note">معاينة تفاعلية على الكمبيوتر</div>
+<a class="back-link" href="newtab.html">العودة <span>←</span></a>
+</header>
+<main class="sim-layout">
+<section class="preview-area">
+<div class="preview-heading"><div><p class="eyebrow">LIVE DEVICE PREVIEW</p><h1>جرّب مظهر هاتفك قبل تطبيقه</h1><p>غيّر التصميم وشاهد النتيجة مباشرة داخل الهاتف الافتراضي.</p></div><span class="live-dot">معاينة مباشرة</span></div>
+<div class="device-stage">
+<div class="device" id="device">
+<div class="device-screen" id="deviceScreen">
+<div class="phone-wallpaper" id="phoneWallpaper"></div>
+<div class="phone-shade"></div>
+<div class="status-bar"><span id="phoneTime">09:41</span><span>● ● ● ▰</span></div>
+<div class="phone-content">
+<div class="phone-date"><span id="phoneDay">الثلاثاء، 10 نوفمبر</span><strong id="phoneClock">09:41</strong></div>
+<div class="phone-search">⌕ <span>ابحث في الهاتف</span> <span class="mic">◉</span></div>
+<section class="phone-page active" id="page-home">
+<div class="phone-widget"><span>مرحباً بك</span><strong>يومك يبدأ بإبداع</strong><small>خصص كل تفصيل كما تحب</small></div>
+<div class="phone-app-grid" id="homeApps"></div>
+<div class="dock" id="phoneDock"></div>
+</section>
+<section class="phone-page" id="page-apps">
+<div class="page-title">كل التطبيقات</div>
+<div class="phone-app-grid all-apps" id="allApps"></div>
+</section>
+<section class="phone-page" id="page-widgets">
+<div class="page-title">الودجات</div>
+<div class="phone-widget large-widget"><span>الساعة</span><strong id="widgetClock">09:41</strong><small id="widgetDate">الثلاثاء، 10 نوفمبر</small></div>
+<div class="phone-widget"><span>الطقس</span><strong>24°</strong><small>مشمس — معاينة شكلية</small></div>
+<div class="phone-widget"><span>التقويم</span><strong>اليوم</strong><small>لا توجد أحداث في المعاينة</small></div>
+</section>
+</div>
+<nav class="phone-nav" aria-label="صفحات المعاينة">
+<button class="active" data-page="home" type="button"><span>⌂</span><small>الرئيسية</small></button>
+<button data-page="apps" type="button"><span>▦</span><small>التطبيقات</small></button>
+<button data-page="widgets" type="button"><span>▣</span><small>الودجات</small></button>
+</nav>
+<div class="gesture-bar"></div>
+</div>
+</div>
+<div class="device-tools"><button id="smaller" type="button" aria-label="تصغير الهاتف">−</button><span id="deviceSize">390 × 844</span><button id="larger" type="button" aria-label="تكبير الهاتف">+</button><button id="resetPreview" type="button">إعادة المعاينة</button></div>
+</div>
+<p class="preview-disclaimer">هذه محاكاة لتصميم المشغّل والودجات، وليست محاكاة لنظام Android كاملاً. التطبيقات تفتح روابطها الحقيقية ولا تعمل داخل الهاتف الافتراضي.</p>
+</section>
+<aside class="studio">
+<div class="studio-title"><span class="studio-icon">✦</span><div><h2>استوديو التخصيص</h2><p>التغييرات تحفظ محلياً في هذا المتصفح</p></div></div>
+<div class="control-section"><h3>المظهر والألوان</h3>
+<label>لون الواجهة <input id="accent" type="color" value="#b6a1ff"></label>
+<label>خلفية الشاشة <input id="wallpaperColor" type="color" value="#18223b"></label>
+<label>شفافية البطاقات <output id="glassOut">35%</output></label><input id="glass" type="range" min="10" max="90" value="35">
+<label>وضوح الخلفية <output id="opacityOut">100%</output></label><input id="opacity" type="range" min="15" max="100" value="100">
+<label>شكل الأيقونات</label><select id="shape"><option value="soft">مربّع ناعم</option><option value="round">دائري</option><option value="pill">كبسولة</option><option value="sharp">حواف حادة</option></select>
+<label class="file-control">اختيار صورة خلفية<input id="wallpaperFile" type="file" accept="image/*"></label>
+<button class="subtle-button" id="clearWallpaper" type="button">إزالة الصورة</button>
+</div>
+<div class="control-section"><h3>تطبيقات الهاتف</h3><p class="control-help">أضف اسماً ورابط الموقع الرسمي أو صفحة التنزيل. الضغط على الأيقونة يفتح الرابط في تبويب جديد.</p>
+<div class="app-editor"><input id="appName" maxlength="22" placeholder="اسم التطبيق"><input id="appUrl" type="url" placeholder="https://..." dir="ltr"><button id="addApp" type="button">إضافة</button></div>
+<div id="appManager" class="app-manager"></div>
+</div>
+<div class="control-section"><h3>حجم الهاتف</h3><label>مقياس المعاينة <output id="scaleOut">100%</output></label><input id="scale" type="range" min="75" max="115" value="100">
+</div>
+<div class="studio-actions"><button id="resetAll" type="button">استعادة الإعدادات</button><button id="exportDesign" type="button" class="primary">تصدير التصميم</button></div>
+<p class="studio-footnote">لا يتم تثبيت التطبيقات على الكمبيوتر. أضف رابط المتجر أو الموقع الرسمي لكل تطبيق، ويمكنك تجربة ترتيب الأيقونات وشكلها هنا.</p>
+</aside>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="simulator.js" defer></script>
+</body></html>
