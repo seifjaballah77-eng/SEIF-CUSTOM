@@ -8,7 +8,7 @@ The repository now contains a first browser New Tab implementation in `extension
 - Minimal Arabic RTL layout, compact translucent controls, clock/date and web search.
 - Add/remove up to 20 custom shortcuts.
 - Manual light/dark toggle and adjustable panel transparency.
-- Choose a local image or MP4/WebM/OGG video as the New Tab background.
+- Choose a local still/animated image (including GIF/WebP) or MP4/WebM/OGG video as the New Tab background.\n- Adjust wallpaper opacity separately from the glass-panel transparency.
 - Video loops muted by default; motion can be paused manually.
 - Wallpaper files and preferences stay in local browser storage. Settings can be imported/exported (wallpaper file itself is not included in settings backup).
 - No automatic power-saving changes and no automatic light/dark switching.
@@ -26,5 +26,5 @@ See [docs/MASTER-PLAN.md](docs/MASTER-PLAN.md) for the full Android, desktop, ic
 ## Important implementation boundaries
 - The browser extension customizes the New Tab page only. It cannot restyle protected browser pages or the Windows shell.
 - Android system surfaces such as the notification shade, lock screen, and Settings are restricted. The future Android app will distinguish its own launcher UI from system UI.
-- The Android launcher, encrypted vault, biometric flows, keyboard, native widgets, and Windows companion are **planned, not implemented** in this milestone.
+- The Android live wallpapers (animated GIF/WebP and video with adjustable transparency), launcher, encrypted vault, biometric flows, keyboard, native widgets, and Windows companion are **planned, not implemented** in this milestone.
 - Do not treat a feature as complete until it has been tested on the target browser/device.

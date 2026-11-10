@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<video id="bgVideo" class="wallpaper-video" muted loop playsinline aria-hidden="true"></video>
+<img id="bgImage" class="wallpaper-image" alt="" aria-hidden="true"><video id="bgVideo" class="wallpaper-video" muted loop playsinline aria-hidden="true"></video>
 <div class="ambient" aria-hidden="true"></div><div class="shade" aria-hidden="true"></div>
 <header class="topbar">
 <a class="brand" href="#" aria-label="SEIF CUSTOM"><span class="brand-mark">S</span><span class="brand-copy"><strong>SEIF CUSTOM</strong><small>مساحة عملك، بطريقتك</small></span></a>
@@ -23,7 +23,7 @@
 </main>
 <aside class="settings-panel" id="settingsPanel" hidden aria-label="إعدادات مساحة العمل">
 <div class="panel-heading"><strong>تخصيص سريع</strong><button id="closeSettings" class="close-button" type="button" aria-label="إغلاق">×</button></div>
-<label class="range-row" for="glassRange"><span>شفافية اللوحات</span><output id="glassValue">42%</output></label><input id="glassRange" type="range" min="18" max="78" step="1" value="42">
+<label class="range-row" for="glassRange"><span>شفافية اللوحات</span><output id="glassValue">42%</output></label><input id="glassRange" type="range" min="18" max="78" step="1" value="42"><label class="range-row" for="wallpaperOpacity"><span>شفافية الخلفية</span><output id="wallpaperOpacityValue">100%</output></label><input id="wallpaperOpacity" type="range" min="15" max="100" step="1" value="100">
 <label class="check-row"><input id="motionToggle" type="checkbox" checked><span>السماح بالحركة والخلفيات المتحركة</span></label>
 <div class="panel-actions"><button id="exportButton" type="button">تصدير الإعدادات</button><button id="importButton" type="button">استيراد الإعدادات</button><button id="removeWallpaperButton" class="quiet-danger" type="button">إزالة الخلفية</button></div>
 <p class="panel-note">كل تغيير اختياري ويدوي. لا يتم تفعيل توفير الطاقة أو تبديل النهاري والليلي دون اختيارك.</p>
