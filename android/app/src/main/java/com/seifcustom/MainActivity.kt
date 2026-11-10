@@ -29,6 +29,7 @@ class MainActivity : Activity() {
     private lateinit var filterFavorites: Button
     private lateinit var filterHidden: Button
     private var appFilter = "visible"
+    private var navigationPreview: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -283,18 +284,24 @@ class MainActivity : Activity() {
     private fun setupNavigationPreview() {
         val root = (findViewById<View>(android.R.id.content) as android.view.ViewGroup).getChildAt(0) as? android.widget.ScrollView ?: return
         val container = root.getChildAt(0) as? LinearLayout ?: return
-        val old = findViewById<TextView>(0x7f0a7e01)
-        if (old != null) container.removeView(old)
+        navigationPreview?.let { container.removeView(it) }
         val shape = prefs.getString("nav_bottom_shape","شريط صغير")
+        val glyph = when (shape) {
+            "دائرة" -> "●"
+            "مربع دائري" -> "▣"
+            "خط مزدوج" -> "━  ━"
+            "نيون مضيء" -> "━━━━━━"
+            "زجاجي" -> "▰"
+            else -> "━━━━"
+        }
         val color = prefs.getString("nav_color","#D8DDF0")
         val preview = TextView(this).apply {
-            id = 0x7f0a7e01
-            text = "معاينة الخط:  ━━━━━     |     رجوع من اليمين واليسار"
+            text = "معاينة الخط:  $glyph     |     سحب من الجانبين للرجوع"
             gravity = Gravity.CENTER; textSize = 13f; setTextColor(Color.parseColor(color))
             setPadding(10, 18, 10, 18); setBackgroundResource(R.drawable.panel_bg)
         }
-        val sectionIndex = container.indexOfChild(container.findViewWithText("SEIF Gesture Navigation"))
+        navigationPreview = preview
+        val sectionIndex = container.findViewWithText("SEIF Gesture Navigation")?.let { container.indexOfChild(it) } ?: -1
         container.addView(preview, if (sectionIndex >= 0) sectionIndex+1 else 2)
     }
-
 }
