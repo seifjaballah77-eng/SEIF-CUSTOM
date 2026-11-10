@@ -25,7 +25,7 @@ class SeifKeyboardService : InputMethodService() {
     override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
         symbols = false
-        if (::root.isInitialized) rebuild()
+        rebuild()
     }
 
     private fun rebuild() {
