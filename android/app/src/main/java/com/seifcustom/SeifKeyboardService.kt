@@ -68,7 +68,7 @@ class SeifKeyboardService : InputMethodService() {
         }
     }
 
-    private fun colorPref(key: String, fallback: Int): Int = try { android.graphics.Color.parseColor(getSharedPreferences("seif-custom", MODE_PRIVATE).getString(key, null) ?: return fallback) } catch (_: Exception) { fallback }
+    private fun colorPref(key: String, fallback: Int): Int { return try { val value = getSharedPreferences("seif-custom", MODE_PRIVATE).getString(key, null); if (value.isNullOrBlank()) fallback else android.graphics.Color.parseColor(value) } catch (_: Exception) { fallback } }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 }
