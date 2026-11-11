@@ -7,301 +7,160 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
+import android.provider.Settings
+import android.util.Base64
 import android.view.Gravity
-import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.SeekBar
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
+import org.json.JSONArray
+import org.json.JSONObject
+import java.security.MessageDigest
+import java.security.SecureRandom
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.PBEKeySpec
 
 class MainActivity : Activity() {
     private val prefs by lazy { getSharedPreferences("seif-custom", MODE_PRIVATE) }
+    private lateinit var page: LinearLayout
     private var chosenUri: Uri? = null
-    private lateinit var selectedFile: TextView
-    private lateinit var appList: LinearLayout
-    private lateinit var searchApps: EditText
-    private lateinit var filterVisible: Button
-    private lateinit var filterFavorites: Button
-    private lateinit var filterHidden: Button
-    private var appFilter = "visible"
-    private var navigationPreview: TextView? = null
+    private var unlocked = false
+    private var vaultItems = JSONArray()
+    private val accent get() = try { Color.parseColor(prefs.getString("accent_color", "#B58CFF")) } catch (_: Exception) { 0xFFB58CFF.toInt() }
+    private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+    private fun tint(c: Int) = android.content.res.ColorStateList.valueOf(c)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        selectedFile = findViewById(R.id.selectedFile)
-        appList = findViewById(R.id.appList)
-        searchApps = findViewById(R.id.searchApps)
-        filterVisible = findViewById(R.id.filterVisible)
-        filterFavorites = findViewById(R.id.filterFavorites)
-        filterHidden = findViewById(R.id.filterHidden)
         chosenUri = prefs.getString("wallpaper_uri", null)?.let { Uri.parse(it) }
-        if (chosenUri != null) selectedFile.text = "خلفية محفوظة على هذا الجهاز"
-        findViewById<Button>(R.id.chooseWallpaper).setOnClickListener {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE); type = "*/*"
-                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/gif", "image/webp", "image/*", "video/mp4", "video/webm", "video/ogg"))
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-            }
-            startActivityForResult(intent, 41)
+        val root = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setBackgroundColor(0xFF0B1020.toInt()) }
+        val side = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(7), dp(10), dp(7), dp(10)); setBackgroundColor(0xFF151C31.toInt()) }
+        side.addView(label("SEIF\nCUSTOM", 18f, accent, true).apply { gravity = Gravity.CENTER; setPadding(0, dp(14), 0, dp(18)) })
+        root.addView(ScrollView(this).apply { addView(side) }, LinearLayout.LayoutParams(dp(112), -1))
+        page = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(13), dp(12), dp(13), dp(22)) }
+        root.addView(ScrollView(this).apply { fillViewport = true; addView(page) }, LinearLayout.LayoutParams(0, -1, 1f))
+        setContentView(root)
+        listOf(Triple("home","⌂","الرئيسية"),Triple("apps","▦","التطبيقات"),Triple("wallpaper","▧","الخلفيات"),Triple("personal","✦","التخصيص"),Triple("system","◉","أدوات الهاتف"),Triple("vault","▣","الخزنة"),Triple("gestures","⌁","الإيماءات")).forEach { (id,icon,title) ->
+            side.addView(Button(this).apply { text="$icon\n$title"; textSize=10f; isAllCaps=false; setTextColor(Color.WHITE); backgroundTintList=tint(0xFF26314D.toInt()); minHeight=dp(55); setOnClickListener { show(id) } }, LinearLayout.LayoutParams(-1,dp(58)).apply { bottomMargin=dp(5) })
         }
-        val seek = findViewById<SeekBar>(R.id.opacitySeek)
-        val saved = prefs.getInt("wallpaper_opacity", 100).coerceIn(15, 100)
-        seek.max = 85
-        seek.progress = saved - 15
-        updateOpacityLabel(saved)
-        seek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val value = progress + 15
-                prefs.edit().putInt("wallpaper_opacity", value).apply()
-                updateOpacityLabel(value)
-            }
-            override fun onStartTrackingTouch(bar: SeekBar?) {}
-            override fun onStopTrackingTouch(bar: SeekBar?) {}
-        })
-        findViewById<Button>(R.id.applyWallpaper).setOnClickListener {
-            if (chosenUri == null) Toast.makeText(this, "اختر صورة أو فيديو أولاً.", Toast.LENGTH_SHORT).show()
-            else {
-                val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
-                    putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, ComponentName(this@MainActivity, VideoWallpaperService::class.java))
-                }
-                try { startActivity(intent) } catch (_: Exception) { Toast.makeText(this, "تعذر فتح معاينة الخلفية الحية.", Toast.LENGTH_LONG).show() }
-            }
-        }
-        findViewById<Button>(R.id.removeWallpaper).setOnClickListener {
-            prefs.edit().remove("wallpaper_uri").apply()
-            chosenUri = null
-            selectedFile.text = "لم تختر خلفية بعد"
-            Toast.makeText(this, "أزيل اختيار الخلفية من التطبيق؛ الخلفية الحالية للهاتف لم تتغير.", Toast.LENGTH_LONG).show()
-        }
-        searchApps.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { renderApps() }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-        filterVisible.setOnClickListener { appFilter = "visible"; updateFilterButtons(); renderApps() }
-        filterFavorites.setOnClickListener { appFilter = "favorites"; updateFilterButtons(); renderApps() }
-        filterHidden.setOnClickListener { appFilter = "hidden"; updateFilterButtons(); renderApps() }
-        updateFilterButtons()
-        renderApps()
-        setupNavigationStudio()
+        show("home")
     }
 
-    @Deprecated("Use the document picker result callback")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 41 && resultCode == RESULT_OK) {
-            val uri = data?.data ?: return
-            try { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (_: Exception) {}
-            chosenUri = uri
-            prefs.edit().putString("wallpaper_uri", uri.toString()).apply()
-            selectedFile.text = "تم اختيار: " + (uri.lastPathSegment ?: "ملف محلي")
-        }
+    private fun label(s:String,size:Float=13f,color:Int=0xFFEAF0FF.toInt(),bold:Boolean=false)=TextView(this).apply { text=s;textSize=size;setTextColor(color);if(bold)setTypeface(null,android.graphics.Typeface.BOLD);setPadding(dp(2),dp(5),dp(2),dp(5)) }
+    private fun card(title:String,subtitle:String?=null):LinearLayout {
+        val c=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL;setPadding(dp(12),dp(10),dp(12),dp(10));background=android.graphics.drawable.GradientDrawable().apply { setColor(0xFF171F34.toInt());cornerRadius=dp(15).toFloat();setStroke(dp(1),0xFF2D3A59.toInt()) } }
+        c.addView(label(title,15f,accent,true));if(!subtitle.isNullOrBlank())c.addView(label(subtitle,11f,0xFFADB9D3.toInt()))
+        page.addView(c,LinearLayout.LayoutParams(-1,-2).apply { topMargin=dp(10) });return c
     }
-
-    private fun updateOpacityLabel(value: Int) {
-        findViewById<TextView>(R.id.opacityLabel).text = "وضوح الخلفية: $value%"
+    private fun button(parent:LinearLayout,title:String,run:()->Unit) { parent.addView(Button(this).apply { text=title;isAllCaps=false;textSize=12f;setTextColor(Color.WHITE);backgroundTintList=tint(0xFF303D60.toInt());setOnClickListener { run() } },LinearLayout.LayoutParams(-1,dp(47)).apply { topMargin=dp(5) }) }
+    private fun show(section:String) {
+        page.removeAllViews()
+        val title=when(section){"apps"->"مركز التطبيقات";"wallpaper"->"استوديو الخلفيات";"personal"->"استوديو التخصيص";"system"->"أدوات الهاتف";"vault"->"الخزنة الخاصة";"gestures"->"التنقل والإيماءات";else->"تجربتك الرقمية بطريقتك"}
+        page.addView(label("SEIF CUSTOM  /  $title",18f,Color.WHITE,true));page.addView(label("PERSONAL DEVICE EXPERIENCE",9f,0xFF8998B9.toInt()))
+        when(section){"apps"->apps();"wallpaper"->wallpaper();"personal"->personal();"system"->systemTools();"vault"->vault();"gestures"->gestures();else->home()}
     }
-
-    private fun updateFilterButtons() {
-        filterVisible.isSelected = appFilter == "visible"
-        filterFavorites.isSelected = appFilter == "favorites"
-        filterHidden.isSelected = appFilter == "hidden"
-        filterVisible.alpha = if (filterVisible.isSelected) 1f else .65f
-        filterFavorites.alpha = if (filterFavorites.isSelected) 1f else .65f
-        filterHidden.alpha = if (filterHidden.isSelected) 1f else .65f
+    private fun home() {
+        val c=card("مرحباً بك في SEIF CUSTOM","مركز واحد للخلفيات والتطبيقات والألوان والأدوات والخزنة.")
+        button(c,"ابدأ تخصيص الألوان والأزرار"){show("personal")};button(c,"اختيار صورة أو فيديو للخلفية"){show("wallpaper")};button(c,"أدوات Wi-Fi وBluetooth والصوت"){show("system")};button(c,"افتح الخزنة بكلمة مرور"){show("vault")}
+        val h=card("اجعل SEIF مشغّل الهاتف","الإخفاء داخل قائمة SEIF فقط؛ لا يخفي تطبيقات أخرى من إعدادات Android أو المشغّلات الأخرى.")
+        button(h,"اختيار المشغّل الافتراضي"){openHomeSettings()}
     }
-
-    private fun renderApps() {
-        appList.removeAllViews()
-        val pm = packageManager
-        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-        val apps = pm.queryIntentActivities(intent, PackageManager.MATCH_ALL)
-            .filter { it.activityInfo.packageName != packageName }
-            .distinctBy { it.activityInfo.packageName }
-        val hidden = prefs.getStringSet("hidden_apps", emptySet())?.toMutableSet() ?: mutableSetOf()
-        val favorites = prefs.getStringSet("favorite_apps", emptySet())?.toMutableSet() ?: mutableSetOf()
-        val query = searchApps.text?.toString()?.trim()?.lowercase().orEmpty()
-        val filtered = apps.filter { info ->
-            val pkg = info.activityInfo.packageName
-            val isHidden = pkg in hidden
-            val inTab = when (appFilter) {
-                "hidden" -> isHidden
-                "favorites" -> !isHidden && pkg in favorites
-                else -> !isHidden
+    private fun apps() {
+        val c=card("التطبيقات المثبتة","بحث ومفضلة وإخفاء من قائمة SEIF CUSTOM فقط. اختر SEIF كمشغّل افتراضي لاستخدام قائمته كشاشة رئيسية.")
+        val search=EditText(this).apply{hint="ابحث عن تطبيق";setSingleLine(true);setTextColor(Color.WHITE);setHintTextColor(0xFF8795B1.toInt())};c.addView(search)
+        val tabs=LinearLayout(this).apply{orientation=LinearLayout.HORIZONTAL};c.addView(tabs)
+        val list=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL};c.addView(list)
+        var filter="all"
+        fun render(){
+            list.removeAllViews();val pm=packageManager
+            val all=pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER),PackageManager.MATCH_ALL).filter{it.activityInfo.packageName!=packageName}.distinctBy{it.activityInfo.packageName}
+            val hidden=prefs.getStringSet("hidden_apps",emptySet())?.toMutableSet()?:mutableSetOf();val favs=prefs.getStringSet("favorite_apps",emptySet())?.toMutableSet()?:mutableSetOf();val q=search.text.toString().trim().lowercase()
+            val results=all.filter{info->val pkg=info.activityInfo.packageName;val ok=when(filter){"hidden"->pkg in hidden;"fav"->pkg in favs&&pkg !in hidden;else->pkg !in hidden};ok&&(q.isBlank()||info.loadLabel(pm).toString().lowercase().contains(q))}.sortedBy{it.loadLabel(pm).toString().lowercase()}
+            list.addView(label("عدد النتائج: ${results.size}",11f,0xFFAEBBD6.toInt()))
+            results.forEach{info->val pkg=info.activityInfo.packageName;val row=LinearLayout(this).apply{orientation=LinearLayout.HORIZONTAL;gravity=Gravity.CENTER_VERTICAL}
+                row.addView(ImageView(this).apply{setImageDrawable(info.loadIcon(pm));layoutParams=LinearLayout.LayoutParams(dp(34),dp(34))})
+                row.addView(label(info.loadLabel(pm).toString(),11f,Color.WHITE).apply{layoutParams=LinearLayout.LayoutParams(0,-2,1f)})
+                row.addView(Button(this).apply{text=if(pkg in favs)"★" else "☆";minWidth=dp(36);setOnClickListener{val s=prefs.getStringSet("favorite_apps",emptySet())!!.toMutableSet();if(!s.add(pkg))s.remove(pkg);prefs.edit().putStringSet("favorite_apps",s).apply();render()}})
+                row.addView(Button(this).apply{text=if(pkg in hidden)"إظهار" else "إخفاء";textSize=9f;setOnClickListener{val s=prefs.getStringSet("hidden_apps",emptySet())!!.toMutableSet();if(!s.add(pkg))s.remove(pkg);prefs.edit().putStringSet("hidden_apps",s).apply();render()}})
+                row.setOnClickListener{pm.getLaunchIntentForPackage(pkg)?.let{try{startActivity(it)}catch(_:Exception){}}};list.addView(row)
             }
-            inTab && (query.isBlank() || info.loadLabel(pm).toString().lowercase().contains(query) || pkg.lowercase().contains(query))
-        }.sortedWith(compareByDescending<android.content.pm.ResolveInfo> { it.activityInfo.packageName in favorites }.thenBy { it.loadLabel(pm).toString().lowercase() })
-
-        findViewById<TextView>(R.id.appCount).text = when (appFilter) {
-            "hidden" -> "التطبيقات المخفية داخل SEIF CUSTOM: ${filtered.size}"
-            "favorites" -> "تطبيقاتك المفضلة: ${filtered.size}"
-            else -> "التطبيقات المتاحة في المشغّل: ${filtered.size}"
         }
-        if (filtered.isEmpty()) {
-            appList.addView(TextView(this).apply {
-                text = when (appFilter) {
-                    "hidden" -> "لا توجد تطبيقات مخفية هنا."
-                    "favorites" -> "لم تضف تطبيقات للمفضلة بعد."
-                    else -> "لا توجد نتائج. جرّب كلمة بحث أخرى."
-                }
-                setTextColor(Color.LTGRAY); textSize = 13f; setPadding(8, 18, 8, 18)
-            })
-            return
-        }
-        filtered.forEach { info ->
-            val pkg = info.activityInfo.packageName
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(10, 9, 10, 9)
-                setBackgroundResource(R.drawable.panel_bg)
-            }
-            val icon = android.widget.ImageView(this).apply {
-                setImageDrawable(info.loadIcon(pm))
-                layoutParams = LinearLayout.LayoutParams(42, 42)
-            }
-            val name = TextView(this).apply {
-                text = info.loadLabel(pm)
-                setTextColor(Color.WHITE)
-                textSize = 14f
-                setPadding(12, 0, 8, 0)
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            }
-            val favorite = Button(this).apply {
-                text = if (pkg in favorites) "★" else "☆"
-                textSize = 17f
-                minWidth = 42
-                setOnClickListener {
-                    val current = prefs.getStringSet("favorite_apps", emptySet())?.toMutableSet() ?: mutableSetOf()
-                    if (!current.add(pkg)) current.remove(pkg)
-                    prefs.edit().putStringSet("favorite_apps", current).apply()
-                    renderApps()
-                }
-            }
-            val action = Button(this).apply {
-                text = if (appFilter == "hidden") "استعادة" else "إخفاء"
-                textSize = 10f
-                setOnClickListener {
-                    val current = prefs.getStringSet("hidden_apps", emptySet())?.toMutableSet() ?: mutableSetOf()
-                    if (appFilter == "hidden") current.remove(pkg) else current.add(pkg)
-                    prefs.edit().putStringSet("hidden_apps", current).apply()
-                    renderApps()
-                }
-            }
-            row.addView(icon); row.addView(name); row.addView(favorite); row.addView(action)
-            row.setOnClickListener {
-                if (appFilter != "hidden") {
-                    pm.getLaunchIntentForPackage(pkg)?.let { launch ->
-                        try { startActivity(launch) } catch (_: Exception) { Toast.makeText(this, "تعذر فتح التطبيق.", Toast.LENGTH_SHORT).show() }
-                    }
-                }
-            }
-            appList.addView(row)
-            appList.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(1, 7) })
-        }
+        listOf("الكل" to "all","المفضلة" to "fav","المخفية" to "hidden").forEach{(n,k)->tabs.addView(Button(this).apply{text=n;textSize=9f;setOnClickListener{filter=k;render()}},LinearLayout.LayoutParams(0,dp(42),1f))}
+        search.addTextChangedListener(object:android.text.TextWatcher{override fun beforeTextChanged(s:CharSequence?,st:Int,count:Int,a:Int){};override fun onTextChanged(s:CharSequence?,st:Int,b:Int,count:Int){render()};override fun afterTextChanged(s:android.text.Editable?){}})
+        render();button(c,"تعيين SEIF كمشغّل افتراضي"){openHomeSettings()}
     }
-
-    private fun setupNavigationStudio() {
-        val root = (findViewById<View>(android.R.id.content) as android.view.ViewGroup).getChildAt(0) as? android.widget.ScrollView ?: return
-        val container = root.getChildAt(0) as? LinearLayout ?: return
-        val section = TextView(this).apply {
-            text = "SEIF Gesture Navigation"
-            setTextColor(Color.WHITE); textSize = 19f; setTypeface(null, android.graphics.Typeface.BOLD)
-            setPadding(14, 22, 14, 10); setBackgroundResource(R.drawable.panel_bg)
-        }
-        container.addView(section)
-        container.addView(TextView(this).apply {
-            text = "تنقل بالسحب من أسفل الشاشة، والرجوع من الحافتين. الضغط على الخط 3 ثوانٍ يفتح المساعد الافتراضي. يتطلب تفعيل خدمة إمكانية الوصول يدوياً."
-            setTextColor(Color.LTGRAY); textSize = 12f; setPadding(8, 10, 8, 10)
-        })
-        fun addChoice(title: String, key: String, values: List<String>, default: String) {
-            container.addView(TextView(this).apply { text = title; setTextColor(Color.WHITE); textSize = 14f; setPadding(8, 12, 8, 4) })
-            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-            values.forEach { value ->
-                val button = Button(this).apply {
-                    text = value; textSize = 10f
-                    setOnClickListener {
-                        prefs.edit().putString(key, value).apply()
-                        Toast.makeText(this@MainActivity, "تم اختيار: $value", Toast.LENGTH_SHORT).show()
-                        setupNavigationPreview()
-                    }
-                }
-                row.addView(button, LinearLayout.LayoutParams(0, 46, 1f))
-            }
-            container.addView(row)
-            if (prefs.getString(key, null) == null) prefs.edit().putString(key, default).apply()
-        }
-        addChoice("شكل الخط السفلي", "nav_bottom_shape", listOf("شريط صغير","دائرة","مربع دائري","خط مزدوج","نيون مضيء","زجاجي"), "شريط صغير")
-        addChoice("شكل مؤشرات الجانبين", "nav_side_shape", listOf("سهم","زاوية","ثلاث نقاط","دائري","مربع"), "سهم")
-        addChoice("لون عناصر التنقل", "nav_color", listOf("#D8DDF0","#FFFFFF","#C6A15B","#A78BFA","#38D9FF"), "#D8DDF0")
-        val sensLabel = TextView(this).apply { text = "حساسية السحب"; setTextColor(Color.WHITE); setPadding(8, 12, 8, 4) }
-        container.addView(sensLabel)
-        val sensitivity = SeekBar(this).apply {
-            max = 65; progress = (prefs.getInt("nav_sensitivity",55)-35).coerceIn(0,65)
-            setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    val value=progress+35; prefs.edit().putInt("nav_sensitivity",value).apply()
-                    sensLabel.text="حساسية السحب: $value"
-                }
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-            })
-        }
-        sensLabel.text = "حساسية السحب: ${prefs.getInt("nav_sensitivity",55)}"
-        container.addView(sensitivity)
-        fun toggleButton(label: String, key: String) {
-            val button = Button(this).apply {
-                fun refresh() { text = label + if (prefs.getBoolean(key,true)) " — مفعّل" else " — متوقف" }
-                refresh()
-                setOnClickListener { prefs.edit().putBoolean(key,!prefs.getBoolean(key,true)).apply(); refresh() }
-            }
-            container.addView(button)
-        }
-        toggleButton("السحب من اليسار للرجوع", "nav_left_enabled")
-        toggleButton("السحب من اليمين للرجوع", "nav_right_enabled")
-        container.addView(TextView(this).apply {
-            text = "الخط السفلي: سحب قصير للأعلى = التطبيقات الأخيرة، سحب أطول = الرئيسية، ضغط مستمر 3 ثوانٍ = المساعد الافتراضي."
-            setTextColor(Color.LTGRAY); textSize = 12f; setPadding(8, 8, 8, 8)
-        })
-        val enable = Button(this).apply {
-            text = "تفعيل / إدارة إيماءات SEIF من إعدادات إمكانية الوصول"
-            setOnClickListener { try { startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)) } catch (_: Exception) { Toast.makeText(this@MainActivity,"افتح إعدادات إمكانية الوصول يدوياً.",Toast.LENGTH_LONG).show() } }
-        }
-        container.addView(enable)
-        container.addView(TextView(this).apply {
-            text = "الخصوصية: الخدمة لا تقرأ نصوص الشاشة ولا تجمع بيانات. تستخدم إمكانية الوصول فقط لتنفيذ رجوع/رئيسية/التطبيقات الأخيرة بعد تفعيلك لها. قد تتعارض مناطق السحب مع إيماءات الشركة المصنّعة؛ أوقف الخدمة من إعدادات إمكانية الوصول إذا حدث ذلك."
-            setTextColor(0xFF9EABC8.toInt()); textSize = 11f; setPadding(8, 8, 8, 16)
-        })
-        setupNavigationPreview()
+    private fun wallpaper(){
+        val c=card("خلفيات من جهازك","اختر صورة أو GIF أو فيديو ثم افتح معاينة الخلفية الحية وطبّقها.")
+        c.addView(label(if(chosenUri==null)"لم تختر ملفاً بعد" else "الملف المختار: ${chosenUri?.lastPathSegment}",11f))
+        button(c,"＋ رفع صورة / GIF / فيديو"){val i=Intent(Intent.ACTION_OPEN_DOCUMENT).apply{addCategory(Intent.CATEGORY_OPENABLE);type="*/*";putExtra(Intent.EXTRA_MIME_TYPES,arrayOf("image/*","video/*"));addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)};startActivityForResult(i,41)}
+        val op=label("شفافية الصورة: ${prefs.getInt("wallpaper_opacity",100)}%");c.addView(op)
+        c.addView(SeekBar(this).apply{max=85;progress=(prefs.getInt("wallpaper_opacity",100)-15).coerceIn(0,85);setOnSeekBarChangeListener(object:SeekBar.OnSeekBarChangeListener{override fun onProgressChanged(s:SeekBar?,p:Int,u:Boolean){val n=p+15;prefs.edit().putInt("wallpaper_opacity",n).apply();op.text="شفافية الصورة: $n%"};override fun onStartTrackingTouch(s:SeekBar?){};override fun onStopTrackingTouch(s:SeekBar?){}})})
+        button(c,"معاينة وتطبيق الخلفية"){if(chosenUri==null)toast("اختر صورة أو فيديو أولاً")else try{startActivity(Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,ComponentName(this,VideoWallpaperService::class.java)))}catch(_:Exception){toast("تعذر فتح معاينة الخلفية")}}
+        button(c,"مسح الملف المختار"){prefs.edit().remove("wallpaper_uri").apply();chosenUri=null;show("wallpaper")}
+        card("ملاحظة","الفيديو يعمل صامتاً كخلفية حية إذا كان الترميز مدعوماً. بعض الصيغ قد لا تعمل على كل الأجهزة.")
     }
+    private fun personal(){
+        val c=card("ألوان SEIF CUSTOM","اضغط على لون لتطبيقه وحفظه.")
+        listOf("#B58CFF","#38D9FF","#E8B85C","#55D6A5","#FF7C9B","#F1F4FF","#7B9CFF","#FF8A45").chunked(4).forEach{colors->val row=LinearLayout(this).apply{orientation=LinearLayout.HORIZONTAL};colors.forEach{hex->row.addView(Button(this).apply{text="●";textSize=22f;setTextColor(Color.parseColor(hex));backgroundTintList=tint(0xFF26314D.toInt());setOnClickListener{prefs.edit().putString("accent_color",hex).apply();show("personal")}},LinearLayout.LayoutParams(0,dp(48),1f).apply{setMargins(dp(2),dp(2),dp(2),dp(2))})};c.addView(row)}
+        val appearance=card("تفضيلات المظهر");button(appearance,"حفظ الوضع الداكن"){prefs.edit().putString("app_mode","dark").apply();toast("تم حفظ الوضع الداكن")};button(appearance,"حفظ الوضع الفاتح"){prefs.edit().putString("app_mode","light").apply();toast("تم حفظ الوضع الفاتح")}
+        val kb=card("لوحة مفاتيح SEIF","فعّلها من Android ثم اخترها. لوحة المفاتيح لا تحفظ النصوص.")
+        button(kb,"إدارة لوحات المفاتيح"){startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))};button(kb,"اختيار لوحة المفاتيح"){(getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).showInputMethodPicker()}
+        val sys=card("أزرار الهاتف","أزرار Wi-Fi والسطوع والصوت تفتح لوحات Android الرسمية؛ لا يسمح Android للتطبيقات العادية بالتحكم المباشر بكل المفاتيح.")
+        button(sys,"فتح أدوات النظام"){show("system")}
+    }
+    private fun systemTools(){
+        val c=card("مفاتيح الهاتف","تفتح الأزرار لوحة النظام المناسبة بدلاً من أزرار شكلية لا تعمل.")
+        listOf("Wi-Fi والإنترنت" to "wifi","Bluetooth" to "bluetooth","الصوت والاهتزاز" to "sound","السطوع والشاشة" to "display","نقطة الاتصال" to "hotspot","استهلاك البيانات" to "data","وضع الطيران" to "airplane","الموقع" to "location","إدارة التطبيقات" to "apps").forEach{(n,k)->button(c,"◉  $n"){openPanel(k)}}
+        val q=card("لوحة الإعدادات السريعة","اسحب من أعلى الهاتف للوصول إلى مفاتيح النظام الأصلية.");button(q,"فتح إعدادات Android"){startActivity(Intent(Settings.ACTION_SETTINGS))}
+    }
+    private fun openPanel(key:String){
+        val i=when(key){"wifi"->if(Build.VERSION.SDK_INT>=29)Intent(Settings.Panel.ACTION_WIFI)else Intent(Settings.ACTION_WIFI_SETTINGS);"bluetooth"->if(Build.VERSION.SDK_INT>=29)Intent(Settings.Panel.ACTION_BLUETOOTH)else Intent(Settings.ACTION_BLUETOOTH_SETTINGS);"sound"->Intent(Settings.ACTION_SOUND_SETTINGS);"display"->Intent(Settings.ACTION_DISPLAY_SETTINGS);"hotspot"->Intent(Settings.ACTION_WIRELESS_SETTINGS);"data"->Intent(Settings.ACTION_DATA_USAGE_SETTINGS);"airplane"->Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS);"location"->Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);else->Intent(Settings.ACTION_APPLICATION_SETTINGS)}
+        try{startActivity(i)}catch(_:Exception){toast("افتح إعدادات الهاتف يدوياً")}
+    }
+    private fun openHomeSettings(){try{startActivity(Intent(Settings.ACTION_HOME_SETTINGS))}catch(_:Exception){startActivity(Intent(Settings.ACTION_SETTINGS))}}
+    private fun gestures(){
+        val c=card("إيماءات SEIF","سحب قصير من أسفل الشاشة للتطبيقات الأخيرة، وسحب أطول للرئيسية، ومن الحافتين للرجوع. ضغط 3 ثوانٍ لاستدعاء المساعد.")
+        listOf("شريط صغير","دائرة","مربع دائري","خط مزدوج","نيون مضيء","زجاجي").forEach{v->button(c,"شكل المؤشر: $v"){prefs.edit().putString("nav_bottom_shape",v).apply();toast("تم حفظ الشكل")}}
+        val seek=SeekBar(this).apply{max=65;progress=(prefs.getInt("nav_sensitivity",55)-35).coerceIn(0,65);setOnSeekBarChangeListener(object:SeekBar.OnSeekBarChangeListener{override fun onProgressChanged(s:SeekBar?,p:Int,u:Boolean){prefs.edit().putInt("nav_sensitivity",p+35).apply()};override fun onStartTrackingTouch(s:SeekBar?){};override fun onStopTrackingTouch(s:SeekBar?){}})}
+        c.addView(label("حساسية السحب: ${prefs.getInt("nav_sensitivity",55)}"));c.addView(seek)
+        listOf("#FFFFFF","#B58CFF","#38D9FF","#E8B85C","#55D6A5").forEach{hex->button(c,"لون المؤشر $hex"){prefs.edit().putString("nav_color",hex).apply();toast("تم حفظ اللون")}}
+        button(c,"إدارة خدمة إمكانية الوصول"){startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))}
+        card("تنبيه","يجب تفعيل الخدمة يدوياً. قد تختلف الإيماءات حسب الشركة المصنّعة وقد تتعارض مع حواف النظام.")
+    }
+    private fun vault(){
+        val c=card("الخزنة المشفرة","كلمة مرور 8 أحرف على الأقل، تشفير AES-GCM بمفتاح Android Keystore، وتخزين محلي. لا يوجد استرداد تلقائي؛ احتفظ بكلمة المرور.")
+        if(!prefs.contains("vault_hash")){c.addView(label("لم تنشئ كلمة مرور بعد.",12f,0xFFE7C987.toInt()));button(c,"إنشاء كلمة مرور"){createPassword()};return}
+        if(!unlocked){c.addView(label("الخزنة مقفلة."));button(c,"فتح الخزنة"){unlockVault()};return}
+        c.addView(label("الخزنة مفتوحة",12f,0xFF79D8B0.toInt()))
+        button(c,"＋ إضافة ملاحظة مشفرة"){addNote()}
+        button(c,"＋ حفظ صورة أو فيديو أو ملف مشفر (12MB كحد أقصى)"){startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply{addCategory(Intent.CATEGORY_OPENABLE);type="*/*"},73)}
+        for(i in 0 until vaultItems.length()){val item=vaultItems.optJSONObject(i)?:continue;val row=LinearLayout(this).apply{orientation=LinearLayout.HORIZONTAL;gravity=Gravity.CENTER_VERTICAL};row.addView(label(item.optString("name"),11f,Color.WHITE).apply{layoutParams=LinearLayout.LayoutParams(0,-2,1f)});row.addView(Button(this).apply{text="حذف";textSize=9f;setOnClickListener{vaultItems.remove(i);saveVault();show("vault")}});c.addView(row)}
+        button(c,"قفل الخزنة"){unlocked=false;vaultItems=JSONArray();show("vault")}
+    }
+    private fun passwordHash(p:String,salt:ByteArray):String{val spec=PBEKeySpec(p.toCharArray(),salt,120000,256);return try{Base64.encodeToString(SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1").generateSecret(spec).encoded,Base64.NO_WRAP)}finally{spec.clearPassword()}}
+    private fun createPassword(){
+        val form=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(dp(18),dp(8),dp(18),dp(4))}
+        val a=EditText(this).apply{hint="كلمة المرور";inputType=129};val b=EditText(this).apply{hint="تأكيد كلمة المرور";inputType=129};form.addView(a);form.addView(b)
+        val d=android.app.AlertDialog.Builder(this).setTitle("إنشاء الخزنة").setView(form).setNegativeButton("إلغاء",null).setPositiveButton("إنشاء",null).create()
+        d.setOnShowListener{d.getButton(-1).setOnClickListener{if(a.text.length<8||a.text.toString()!=b.text.toString()){toast("استخدم 8 أحرف على الأقل وتأكد من التطابق");return@setOnClickListener};val salt=ByteArray(16).also{SecureRandom().nextBytes(it)};prefs.edit().putString("vault_salt",Base64.encodeToString(salt,Base64.NO_WRAP)).putString("vault_hash",passwordHash(a.text.toString(),salt)).apply();vaultItems=JSONArray();saveVault();unlocked=true;d.dismiss();show("vault")}};d.show()
+    }
+    private fun unlockVault(){
+        val input=EditText(this).apply{hint="كلمة المرور";inputType=129}
+        val d=android.app.AlertDialog.Builder(this).setTitle("فتح الخزنة").setView(input).setNegativeButton("إلغاء",null).setPositiveButton("فتح",null).create()
+        d.setOnShowListener{d.getButton(-1).setOnClickListener{val salt=Base64.decode(prefs.getString("vault_salt","")?: "",Base64.NO_WRAP);val expected=prefs.getString("vault_hash","")?:"";val actual=passwordHash(input.text.toString(),salt);if(!MessageDigest.isEqual(actual.toByteArray(),expected.toByteArray())){toast("كلمة المرور غير صحيحة");return@setOnClickListener};try{vaultItems=JSONArray(String(VaultCrypto.decrypt(openFileInput("seif-vault.bin").use{it.readBytes()}),Charsets.UTF_8))}catch(_:java.io.FileNotFoundException){vaultItems=JSONArray()}catch(_:Exception){toast("تعذر فك تشفير الخزنة");return@setOnClickListener};unlocked=true;d.dismiss();show("vault")}};d.show()
+    }
+    private fun addNote(){
+        val input=EditText(this).apply{hint="اكتب ملاحظتك الخاصة";minLines=4;gravity=Gravity.TOP;setTextColor(Color.WHITE)}
+        val d=android.app.AlertDialog.Builder(this).setTitle("ملاحظة مشفرة").setView(input).setNegativeButton("إلغاء",null).setPositiveButton("حفظ",null).create()
+        d.setOnShowListener{d.getButton(-1).setOnClickListener{if(input.text.isBlank()){toast("اكتب محتوى أولاً");return@setOnClickListener};vaultItems.put(JSONObject().put("name","ملاحظة ${vaultItems.length()+1}").put("type","نص").put("data",input.text.toString()));saveVault();d.dismiss();show("vault")}};d.show()
+    }
+    private fun saveVault(){try{openFileOutput("seif-vault.bin",MODE_PRIVATE).use{it.write(VaultCrypto.encrypt(vaultItems.toString().toByteArray(Charsets.UTF_8)))}}catch(_:Exception){toast("تعذر حفظ الخزنة")}}
+    private fun toast(s:String)=Toast.makeText(this,s,Toast.LENGTH_SHORT).show()
 
-    private fun setupNavigationPreview() {
-        val root = (findViewById<View>(android.R.id.content) as android.view.ViewGroup).getChildAt(0) as? android.widget.ScrollView ?: return
-        val container = root.getChildAt(0) as? LinearLayout ?: return
-        navigationPreview?.let { container.removeView(it) }
-        val shape = prefs.getString("nav_bottom_shape","شريط صغير")
-        val glyph = when (shape) {
-            "دائرة" -> "●"
-            "مربع دائري" -> "▣"
-            "خط مزدوج" -> "━  ━"
-            "نيون مضيء" -> "━━━━━━"
-            "زجاجي" -> "▰"
-            else -> "━━━━"
-        }
-        val color = prefs.getString("nav_color","#D8DDF0")
-        val preview = TextView(this).apply {
-            text = "معاينة الخط:  $glyph     |     سحب من الجانبين للرجوع"
-            gravity = Gravity.CENTER; textSize = 13f; setTextColor(Color.parseColor(color))
-            setPadding(10, 18, 10, 18); setBackgroundResource(R.drawable.panel_bg)
-        }
-        navigationPreview = preview
-        val sectionIndex = container.findViewWithText("SEIF Gesture Navigation")?.let { container.indexOfChild(it) } ?: -1
-        container.addView(preview, if (sectionIndex >= 0) sectionIndex+1 else 2)
+    @Deprecated("Legacy document picker callback")
+    override fun onActivityResult(requestCode:Int,resultCode:Int,data:Intent?){
+        super.onActivityResult(requestCode,resultCode,data);if(resultCode!=RESULT_OK)return;val uri=data?.data?:return
+        if(requestCode==41){try{contentResolver.takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION)}catch(_:Exception){};chosenUri=uri;prefs.edit().putString("wallpaper_uri",uri.toString()).apply();toast("تم حفظ اختيار الخلفية");show("wallpaper")}
+        else if(requestCode==73&&unlocked){try{val bytes=contentResolver.openInputStream(uri)?.use{it.readBytes()}?:byteArrayOf();if(bytes.size>12*1024*1024){toast("حجم الملف أكبر من 12MB");return};vaultItems.put(JSONObject().put("name",uri.lastPathSegment?:"ملف").put("type","ملف مشفر").put("data",Base64.encodeToString(bytes,Base64.NO_WRAP)));saveVault();toast("تم حفظ الملف مشفراً");show("vault")}catch(_:Exception){toast("تعذر قراءة الملف")}}
     }
 }
