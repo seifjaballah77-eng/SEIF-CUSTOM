@@ -103,7 +103,11 @@ class MainActivity : Activity() {
         val c=card("ألوان SEIF CUSTOM","اضغط على لون لتطبيقه وحفظه.")
         listOf("#B58CFF","#38D9FF","#E8B85C","#55D6A5","#FF7C9B","#F1F4FF","#7B9CFF","#FF8A45").chunked(4).forEach{colors->val row=LinearLayout(this).apply{orientation=LinearLayout.HORIZONTAL};colors.forEach{hex->row.addView(Button(this).apply{text="●";textSize=22f;setTextColor(Color.parseColor(hex));backgroundTintList=tint(0xFF26314D.toInt());setOnClickListener{prefs.edit().putString("accent_color",hex).apply();show("personal")}},LinearLayout.LayoutParams(0,dp(48),1f).apply{setMargins(dp(2),dp(2),dp(2),dp(2))})};c.addView(row)}
         val appearance=card("تفضيلات المظهر");button(appearance,"حفظ الوضع الداكن"){prefs.edit().putString("app_mode","dark").apply();toast("تم حفظ الوضع الداكن")};button(appearance,"حفظ الوضع الفاتح"){prefs.edit().putString("app_mode","light").apply();toast("تم حفظ الوضع الفاتح")}
-        val kb=card("لوحة مفاتيح SEIF","فعّلها من Android ثم اخترها. لوحة المفاتيح لا تحفظ النصوص.")
+        val kb=card("لوحة مفاتيح SEIF","فعّلها من Android ثم اخترها. لوحة المفاتيح لا تحفظ النصوص. غيّر لون الأزرار والخلفية وحجم الحروف هنا.")
+        listOf("#171F30","#202A40","#2B1744","#102F3B").forEach{hex->button(kb,"خلفية لوحة المفاتيح $hex"){prefs.edit().putString("keyboard_bg_color",hex).apply();toast("تم حفظ لون الخلفية")}}
+        listOf("#29364D","#49366B","#31546B","#4B4935").forEach{hex->button(kb,"لون أزرار لوحة المفاتيح $hex"){prefs.edit().putString("keyboard_key_color",hex).apply();toast("تم حفظ لون الأزرار")}}
+        button(kb,"حروف أكبر"){prefs.edit().putInt("keyboard_font_size",20).apply();toast("تم تكبير الحروف")}
+        button(kb,"حجم حروف متوسط"){prefs.edit().putInt("keyboard_font_size",17).apply();toast("تم حفظ حجم الحروف")}
         button(kb,"إدارة لوحات المفاتيح"){startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))};button(kb,"اختيار لوحة المفاتيح"){(getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).showInputMethodPicker()}
         val sys=card("أزرار الهاتف","أزرار Wi-Fi والسطوع والصوت تفتح لوحات Android الرسمية؛ لا يسمح Android للتطبيقات العادية بالتحكم المباشر بكل المفاتيح.")
         button(sys,"فتح أدوات النظام"){show("system")}
@@ -121,6 +125,8 @@ class MainActivity : Activity() {
     private fun gestures(){
         val c=card("إيماءات SEIF","سحب قصير من أسفل الشاشة للتطبيقات الأخيرة، وسحب أطول للرئيسية، ومن الحافتين للرجوع. ضغط 3 ثوانٍ لاستدعاء المساعد.")
         listOf("شريط صغير","دائرة","مربع دائري","خط مزدوج","نيون مضيء","زجاجي").forEach{v->button(c,"شكل المؤشر: $v"){prefs.edit().putString("nav_bottom_shape",v).apply();toast("تم حفظ الشكل")}}
+        listOf("سهم","زاوية","ثلاث نقاط","دائري","مربع").forEach{v->button(c,"شكل الحافة: $v"){prefs.edit().putString("nav_side_shape",v).apply();toast("تم حفظ الشكل")}}
+        listOf("nav_left_enabled" to "السحب من اليسار","nav_right_enabled" to "السحب من اليمين").forEach{(key,name)->button(c,"تبديل $name"){val enabled=!prefs.getBoolean(key,true);prefs.edit().putBoolean(key,enabled).apply();toast(if(enabled)"تم التفعيل" else "تم الإيقاف")}}
         val seek=SeekBar(this).apply{max=65;progress=(prefs.getInt("nav_sensitivity",55)-35).coerceIn(0,65);setOnSeekBarChangeListener(object:SeekBar.OnSeekBarChangeListener{override fun onProgressChanged(s:SeekBar?,p:Int,u:Boolean){prefs.edit().putInt("nav_sensitivity",p+35).apply()};override fun onStartTrackingTouch(s:SeekBar?){};override fun onStopTrackingTouch(s:SeekBar?){}})}
         c.addView(label("حساسية السحب: ${prefs.getInt("nav_sensitivity",55)}"));c.addView(seek)
         listOf("#FFFFFF","#B58CFF","#38D9FF","#E8B85C","#55D6A5").forEach{hex->button(c,"لون المؤشر $hex"){prefs.edit().putString("nav_color",hex).apply();toast("تم حفظ اللون")}}
