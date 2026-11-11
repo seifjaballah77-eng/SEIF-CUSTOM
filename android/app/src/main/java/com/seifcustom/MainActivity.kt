@@ -40,10 +40,16 @@ class MainActivity : Activity() {
         page = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(13), dp(12), dp(13), dp(22)) }
         root.addView(ScrollView(this).apply { isFillViewport = true; addView(page) }, LinearLayout.LayoutParams(0, -1, 1f))
         setContentView(root)
-        listOf(Triple("home","⌂","الرئيسية"),Triple("apps","▦","التطبيقات"),Triple("wallpaper","▧","الخلفيات"),Triple("personal","✦","التخصيص"),Triple("system","◉","أدوات الهاتف"),Triple("vault","▣","الخزنة"),Triple("gestures","⌁","الإيماءات")).forEach { (id,icon,title) ->
+        listOf(Triple("home","⌂","الرئيسية"),Triple("launcher","▦","شاشة SEIF"),Triple("apps","▣","التطبيقات"),Triple("permissions","✓","السماحات"),Triple("wallpaper","▧","الخلفيات"),Triple("personal","✦","التخصيص"),Triple("system","◉","أدوات الهاتف"),Triple("vault","◆","الخزنة"),Triple("gestures","⌁","الإيماءات")).forEach { (id,icon,title) ->
             side.addView(Button(this).apply { text="$icon\n$title"; textSize=10f; isAllCaps=false; setTextColor(Color.WHITE); backgroundTintList=tint(0xFF26314D.toInt()); minHeight=dp(55); setOnClickListener { show(id) } }, LinearLayout.LayoutParams(-1,dp(58)).apply { bottomMargin=dp(5) })
         }
-        show("home")
+        show(if (intent?.hasCategory(Intent.CATEGORY_HOME) == true) "launcher" else "home")
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        show(if (intent.hasCategory(Intent.CATEGORY_HOME)) "launcher" else "home")
     }
 
     private fun label(s:String,size:Float=13f,color:Int=0xFFEAF0FF.toInt(),bold:Boolean=false)=TextView(this).apply { text=s;textSize=size;setTextColor(color);if(bold)setTypeface(null,android.graphics.Typeface.BOLD);setPadding(dp(2),dp(5),dp(2),dp(5)) }
@@ -55,13 +61,13 @@ class MainActivity : Activity() {
     private fun button(parent:LinearLayout,title:String,run:()->Unit) { parent.addView(Button(this).apply { text=title;isAllCaps=false;textSize=12f;setTextColor(Color.WHITE);backgroundTintList=tint(0xFF303D60.toInt());setOnClickListener { run() } },LinearLayout.LayoutParams(-1,dp(47)).apply { topMargin=dp(5) }) }
     private fun show(section:String) {
         page.removeAllViews()
-        val title=when(section){"apps"->"مركز التطبيقات";"wallpaper"->"استوديو الخلفيات";"personal"->"استوديو التخصيص";"system"->"أدوات الهاتف";"vault"->"الخزنة الخاصة";"gestures"->"التنقل والإيماءات";else->"تجربتك الرقمية بطريقتك"}
+        val title=when(section){"apps"->"مركز التطبيقات";"launcher"->"الشاشة الرئيسية";"permissions"->"مركز السماحات";"wallpaper"->"استوديو الخلفيات";"personal"->"استوديو التخصيص";"system"->"أدوات الهاتف";"vault"->"الخزنة الخاصة";"gestures"->"التنقل والإيماءات";else->"تجربتك الرقمية بطريقتك"}
         page.addView(label("SEIF CUSTOM  /  $title",18f,Color.WHITE,true));page.addView(label("PERSONAL DEVICE EXPERIENCE",9f,0xFF8998B9.toInt()))
-        when(section){"apps"->apps();"wallpaper"->wallpaper();"personal"->personal();"system"->systemTools();"vault"->vault();"gestures"->gestures();else->home()}
+        when(section){"apps"->apps();"launcher"->launcherHome();"permissions"->permissions();"wallpaper"->wallpaper();"personal"->personal();"system"->systemTools();"vault"->vault();"gestures"->gestures();else->home()}
     }
     private fun home() {
         val c=card("مرحباً بك في SEIF CUSTOM","مركز واحد للخلفيات والتطبيقات والألوان والأدوات والخزنة.")
-        button(c,"ابدأ تخصيص الألوان والأزرار"){show("personal")};button(c,"اختيار صورة أو فيديو للخلفية"){show("wallpaper")};button(c,"أدوات Wi-Fi وBluetooth والصوت"){show("system")};button(c,"افتح الخزنة بكلمة مرور"){show("vault")}
+        button(c,"فتح شاشة SEIF الرئيسية"){show("launcher")};button(c,"مركز السماحات المطلوبة"){show("permissions")};button(c,"ابدأ تخصيص الألوان والأزرار"){show("personal")};button(c,"اختيار صورة أو فيديو للخلفية"){show("wallpaper")};button(c,"أدوات Wi-Fi وBluetooth والصوت"){show("system")};button(c,"افتح الخزنة بكلمة مرور"){show("vault")}
         val h=card("اجعل SEIF مشغّل الهاتف","الإخفاء داخل قائمة SEIF فقط؛ لا يخفي تطبيقات أخرى من إعدادات Android أو المشغّلات الأخرى.")
         button(h,"اختيار المشغّل الافتراضي"){openHomeSettings()}
     }
@@ -73,7 +79,7 @@ class MainActivity : Activity() {
         var filter="all"
         fun render(){
             list.removeAllViews();val pm=packageManager
-            val all=pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER),PackageManager.MATCH_ALL).filter{it.activityInfo.packageName!=packageName}.distinctBy{it.activityInfo.packageName}
+            val all=pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER),0).filter{it.activityInfo.packageName!=packageName}.distinctBy{it.activityInfo.packageName}
             val hidden=prefs.getStringSet("hidden_apps",emptySet())?.toMutableSet()?:mutableSetOf();val favs=prefs.getStringSet("favorite_apps",emptySet())?.toMutableSet()?:mutableSetOf();val q=search.text.toString().trim().lowercase()
             val results=all.filter{info->val pkg=info.activityInfo.packageName;val ok=when(filter){"hidden"->pkg in hidden;"fav"->pkg in favs&&pkg !in hidden;else->pkg !in hidden};ok&&(q.isBlank()||info.loadLabel(pm).toString().lowercase().contains(q))}.sortedBy{it.loadLabel(pm).toString().lowercase()}
             list.addView(label("عدد النتائج: ${results.size}",11f,0xFFAEBBD6.toInt()))
@@ -87,8 +93,101 @@ class MainActivity : Activity() {
         }
         listOf("الكل" to "all","المفضلة" to "fav","المخفية" to "hidden").forEach{(n,k)->tabs.addView(Button(this).apply{text=n;textSize=9f;setOnClickListener{filter=k;render()}},LinearLayout.LayoutParams(0,dp(42),1f))}
         search.addTextChangedListener(object:android.text.TextWatcher{override fun beforeTextChanged(s:CharSequence?,st:Int,count:Int,a:Int){};override fun onTextChanged(s:CharSequence?,st:Int,b:Int,count:Int){render()};override fun afterTextChanged(s:android.text.Editable?){}})
-        render();button(c,"تعيين SEIF كمشغّل افتراضي"){openHomeSettings()}
+        render()
+        button(c,"إظهار جميع التطبيقات المخفية"){prefs.edit().remove("hidden_apps").apply();render();toast("تم إظهار التطبيقات داخل SEIF")}
+        button(c,"تعيين SEIF كمشغّل افتراضي"){requestHomeRole()}
     }
+
+    private fun launcherHome() {
+        page.addView(label("شاشة SEIF الرئيسية",20f,Color.WHITE,true))
+        page.addView(label("اضغط مطولاً على التطبيق لإخفائه من شاشة SEIF فقط. اضغط عليه لفتحه.",11f,0xFFADB9D3.toInt()))
+        val search=EditText(this).apply { hint="ابحث في تطبيقاتك";setSingleLine(true);setTextColor(Color.WHITE);setHintTextColor(0xFF8795B1.toInt()) }
+        page.addView(search,LinearLayout.LayoutParams(-1,dp(48)))
+        val list=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL }
+        page.addView(list)
+        fun render() {
+            list.removeAllViews()
+            val pm=packageManager
+            val hidden=prefs.getStringSet("hidden_apps",emptySet())?.toSet()?:emptySet()
+            val q=search.text.toString().trim().lowercase()
+            val apps=pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER),0)
+                .filter { it.activityInfo.packageName!=packageName && it.activityInfo.packageName !in hidden }
+                .distinctBy { it.activityInfo.packageName }
+                .filter { it.loadLabel(pm).toString().lowercase().contains(q) }
+                .sortedBy { it.loadLabel(pm).toString().lowercase() }
+            list.addView(label("التطبيقات الظاهرة: " + apps.size,11f,0xFFADB9D3.toInt()))
+            apps.forEach { info ->
+                val pkg=info.activityInfo.packageName
+                val row=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL;gravity=Gravity.CENTER_VERTICAL;setPadding(dp(5),dp(5),dp(5),dp(5)) }
+                row.addView(ImageView(this).apply { setImageDrawable(info.loadIcon(pm));layoutParams=LinearLayout.LayoutParams(dp(42),dp(42)) })
+                row.addView(label(info.loadLabel(pm).toString(),13f,Color.WHITE,true).apply { layoutParams=LinearLayout.LayoutParams(0,-2,1f) })
+                row.setOnClickListener { try { pm.getLaunchIntentForPackage(pkg)?.let { startActivity(it) } } catch (_:Exception) { toast("تعذر فتح التطبيق") } }
+                row.setOnLongClickListener {
+                    android.app.AlertDialog.Builder(this).setTitle("إخفاء التطبيق؟")
+                        .setMessage("سيختفي هذا التطبيق من شاشة SEIF فقط، ويمكن إظهاره من مركز التطبيقات.")
+                        .setNegativeButton("إلغاء",null).setPositiveButton("إخفاء") { _,_ ->
+                            val set=prefs.getStringSet("hidden_apps",emptySet())?.toMutableSet()?:mutableSetOf()
+                            set.add(pkg);prefs.edit().putStringSet("hidden_apps",set).apply();render();toast("أُخفي التطبيق من شاشة SEIF")
+                        }.show()
+                    true
+                }
+                list.addView(row)
+            }
+            if(apps.isEmpty()) list.addView(label("لا توجد تطبيقات مطابقة. استعد المخفي من مركز التطبيقات.",12f))
+        }
+        search.addTextChangedListener(object:android.text.TextWatcher {
+            override fun beforeTextChanged(s:CharSequence?,st:Int,count:Int,a:Int) {}
+            override fun onTextChanged(s:CharSequence?,st:Int,b:Int,count:Int) { render() }
+            override fun afterTextChanged(s:android.text.Editable?) {}
+        })
+        render()
+        button(card("إدارة الشاشة"),"إدارة التطبيقات المخفية") { show("apps") }
+        button(card("تفعيل الشاشة الرئيسية"),"اختيار SEIF كمشغّل الهاتف") { requestHomeRole() }
+    }
+
+    private fun isAccessibilityEnabled(): Boolean {
+        val enabled=Settings.Secure.getString(contentResolver,Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)?:return false
+        val component=ComponentName(this,SeifGestureNavigationService::class.java).flattenToString()
+        return Settings.Secure.getInt(contentResolver,Settings.Secure.ACCESSIBILITY_ENABLED,0)==1 &&
+            enabled.split(':').any { it.equals(component,true) }
+    }
+
+    private fun isKeyboardEnabled(): Boolean {
+        val enabled=Settings.Secure.getString(contentResolver,Settings.Secure.ENABLED_INPUT_METHODS)?:return false
+        return enabled.contains(packageName)
+    }
+
+    private fun isHomeRoleHeld(): Boolean {
+        if(Build.VERSION.SDK_INT<29) return false
+        return try { getSystemService(android.app.role.RoleManager::class.java)?.isRoleHeld(android.app.role.RoleManager.ROLE_HOME)==true } catch (_:Exception) { false }
+    }
+
+    private fun requestHomeRole() {
+        try {
+            if(Build.VERSION.SDK_INT>=29) {
+                val manager=getSystemService(android.app.role.RoleManager::class.java)
+                if(manager?.isRoleAvailable(android.app.role.RoleManager.ROLE_HOME)==true && !manager.isRoleHeld(android.app.role.RoleManager.ROLE_HOME)) {
+                    startActivityForResult(manager.createRequestRoleIntent(android.app.role.RoleManager.ROLE_HOME),82)
+                } else openHomeSettings()
+            } else openHomeSettings()
+        } catch (_:Exception) { openHomeSettings() }
+    }
+
+    private fun permissions() {
+        val home=card("مشغّل الهاتف",if(isHomeRoleHeld()) "الحالة: تم اختيار SEIF كمشغّل افتراضي" else "الحالة: لم يتم اختيار SEIF كمشغّل افتراضي")
+        button(home,if(isHomeRoleHeld()) "إدارة المشغّل الافتراضي" else "السماح لـ SEIF بأن يكون الشاشة الرئيسية") { requestHomeRole() }
+        val access=card("خدمة الإيماءات",if(isAccessibilityEnabled()) "الحالة: مفعّلة" else "الحالة: غير مفعّلة")
+        button(access,"فتح صفحة تفعيل إمكانية الوصول") { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+        val keyboard=card("لوحة مفاتيح SEIF",if(isKeyboardEnabled()) "الحالة: مفعّلة ضمن لوحات المفاتيح" else "الحالة: لم تُفعّل بعد")
+        button(keyboard,"إدارة وتفعيل لوحة المفاتيح") { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
+        val app=card("صلاحيات التطبيق","افتح صفحة معلومات SEIF لمراجعة الأذونات التي يسمح بها إصدار Android لديك.")
+        button(app,"فتح أذونات SEIF وإعداداته") {
+            try { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.parse("package:"+packageName))) }
+            catch (_:Exception) { startActivity(Intent(Settings.ACTION_SETTINGS)) }
+        }
+        card("لماذا لا نفعّل كل شيء تلقائياً؟","Android يمنع التطبيقات من منح نفسها صلاحيات حساسة أو التحكم الكامل بالهاتف دون موافقة صاحبه. هذه الصفحة تفتح الإعداد الصحيح وتعرض حالة بعض التفعيلات بدلاً من الادعاء بأنها تمت.")
+    }
+
     private fun wallpaper(){
         val c=card("خلفيات من جهازك","اختر صورة أو GIF أو فيديو ثم افتح معاينة الخلفية الحية وطبّقها.")
         c.addView(label(if(chosenUri==null)"لم تختر ملفاً بعد" else "الملف المختار: ${chosenUri?.lastPathSegment}",11f))
