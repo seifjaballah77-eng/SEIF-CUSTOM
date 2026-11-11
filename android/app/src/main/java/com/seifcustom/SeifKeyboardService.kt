@@ -15,7 +15,7 @@ class SeifKeyboardService : InputMethodService() {
     private val arabic = listOf("ض ص ث ق ف غ ع ه خ ح ج د", "ش س ي ب ل ا ت ن م ك ط", "ئ ء ؤ ر لا ى ة و ز ظ")
     private val english = listOf("q w e r t y u i o p", "a s d f g h j k l", "z x c v b n m")
     private val symbolRows = listOf("1 2 3 4 5 6 7 8 9 0", "@ # € % & - + ( ) /", "* \" ' : ; ! ?")
-    private val root by lazy { LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(3), dp(4), dp(3), dp(4)); setBackgroundColor(0xFF171F30.toInt()) } }
+    private val root by lazy { LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(3), dp(4), dp(3), dp(4)); setBackgroundColor(colorPref("keyboard_bg_color", 0xFF171F30.toInt())) } }
 
     override fun onCreateInputView(): View {
         rebuild()
@@ -43,11 +43,11 @@ class SeifKeyboardService : InputMethodService() {
 
     private fun keyButton(label: String): Button = Button(this).apply {
         text = label
-        textSize = if (label == "مسافة") 12f else 17f
+        textSize = if (label == "مسافة") 12f else getSharedPreferences("seif-custom", MODE_PRIVATE).getInt("keyboard_font_size", 17).toFloat()
         isAllCaps = false
         setTextColor(0xFFF5F7FF.toInt())
         backgroundTintList = android.content.res.ColorStateList.valueOf(
-            if (label == "مسافة") 0xFF34466D.toInt() else 0xFF29364D.toInt()
+            if (label == "مسافة") 0xFF34466D.toInt() else colorPref("keyboard_key_color", 0xFF29364D.toInt())
         )
         minWidth = 0; minimumWidth = 0; minHeight = dp(46); minimumHeight = dp(46)
         layoutParams = LinearLayout.LayoutParams(0, dp(48), 1f).apply { setMargins(dp(2), dp(2), dp(2), dp(2)) }
@@ -67,6 +67,8 @@ class SeifKeyboardService : InputMethodService() {
             else -> connection.commitText(key, 1)
         }
     }
+
+    private fun colorPref(key: String, fallback: Int): Int = try { android.graphics.Color.parseColor(getSharedPreferences("seif-custom", MODE_PRIVATE).getString(key, null) ?: return fallback) } catch (_: Exception) { fallback }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 }
