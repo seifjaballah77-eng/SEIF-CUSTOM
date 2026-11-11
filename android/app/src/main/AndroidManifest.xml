@@ -3,7 +3,7 @@
  <uses-feature android:name="android.software.live_wallpaper" android:required="false"/>
  <queries><intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent></queries>
  <application android:allowBackup="false" android:label="SEIF CUSTOM" android:theme="@style/AppTheme" android:supportsRtl="true">
-  <activity android:name=".MainActivity" android:exported="true">
+  <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask">
    <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
    <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.HOME"/><category android:name="android.intent.category.DEFAULT"/></intent-filter>
   </activity>
