@@ -38,7 +38,7 @@ class MainActivity : Activity() {
         side.addView(label("SEIF\nCUSTOM", 18f, accent, true).apply { gravity = Gravity.CENTER; setPadding(0, dp(14), 0, dp(18)) })
         root.addView(ScrollView(this).apply { addView(side) }, LinearLayout.LayoutParams(dp(112), -1))
         page = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(13), dp(12), dp(13), dp(22)) }
-        root.addView(ScrollView(this).apply { fillViewport = true; addView(page) }, LinearLayout.LayoutParams(0, -1, 1f))
+        root.addView(ScrollView(this).apply { isFillViewport = true; addView(page) }, LinearLayout.LayoutParams(0, -1, 1f))
         setContentView(root)
         listOf(Triple("home","⌂","الرئيسية"),Triple("apps","▦","التطبيقات"),Triple("wallpaper","▧","الخلفيات"),Triple("personal","✦","التخصيص"),Triple("system","◉","أدوات الهاتف"),Triple("vault","▣","الخزنة"),Triple("gestures","⌁","الإيماءات")).forEach { (id,icon,title) ->
             side.addView(Button(this).apply { text="$icon\n$title"; textSize=10f; isAllCaps=false; setTextColor(Color.WHITE); backgroundTintList=tint(0xFF26314D.toInt()); minHeight=dp(55); setOnClickListener { show(id) } }, LinearLayout.LayoutParams(-1,dp(58)).apply { bottomMargin=dp(5) })
@@ -118,7 +118,7 @@ class MainActivity : Activity() {
         val q=card("لوحة الإعدادات السريعة","اسحب من أعلى الهاتف للوصول إلى مفاتيح النظام الأصلية.");button(q,"فتح إعدادات Android"){startActivity(Intent(Settings.ACTION_SETTINGS))}
     }
     private fun openPanel(key:String){
-        val i=when(key){"wifi"->if(Build.VERSION.SDK_INT>=29)Intent(Settings.Panel.ACTION_WIFI)else Intent(Settings.ACTION_WIFI_SETTINGS);"bluetooth"->if(Build.VERSION.SDK_INT>=29)Intent(Settings.Panel.ACTION_BLUETOOTH)else Intent(Settings.ACTION_BLUETOOTH_SETTINGS);"sound"->Intent(Settings.ACTION_SOUND_SETTINGS);"display"->Intent(Settings.ACTION_DISPLAY_SETTINGS);"hotspot"->Intent(Settings.ACTION_WIRELESS_SETTINGS);"data"->Intent(Settings.ACTION_DATA_USAGE_SETTINGS);"airplane"->Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS);"location"->Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);else->Intent(Settings.ACTION_APPLICATION_SETTINGS)}
+        val i=when(key){"wifi"->if(Build.VERSION.SDK_INT>=29)Intent(Settings.Panel.ACTION_WIFI)else Intent(Settings.ACTION_WIFI_SETTINGS);"bluetooth"->if(Build.VERSION.SDK_INT>=29)Intent(Settings.ACTION_BLUETOOTH_SETTINGS)else Intent(Settings.ACTION_BLUETOOTH_SETTINGS);"sound"->Intent(Settings.ACTION_SOUND_SETTINGS);"display"->Intent(Settings.ACTION_DISPLAY_SETTINGS);"hotspot"->Intent(Settings.ACTION_WIRELESS_SETTINGS);"data"->Intent(Settings.ACTION_DATA_USAGE_SETTINGS);"airplane"->Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS);"location"->Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);else->Intent(Settings.ACTION_APPLICATION_SETTINGS)}
         try{startActivity(i)}catch(_:Exception){toast("افتح إعدادات الهاتف يدوياً")}
     }
     private fun openHomeSettings(){try{startActivity(Intent(Settings.ACTION_HOME_SETTINGS))}catch(_:Exception){startActivity(Intent(Settings.ACTION_SETTINGS))}}
