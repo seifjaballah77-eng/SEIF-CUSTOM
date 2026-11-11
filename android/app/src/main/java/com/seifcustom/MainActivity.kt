@@ -166,7 +166,7 @@ class MainActivity : Activity() {
         try {
             if(Build.VERSION.SDK_INT>=29) {
                 val manager=getSystemService(android.app.role.RoleManager::class.java)
-                if(manager?.isRoleAvailable(android.app.role.RoleManager.ROLE_HOME)==true && !manager.isRoleHeld(android.app.role.RoleManager.ROLE_HOME)) {
+                if(manager != null && manager.isRoleAvailable(android.app.role.RoleManager.ROLE_HOME) && !manager.isRoleHeld(android.app.role.RoleManager.ROLE_HOME)) {
                     startActivityForResult(manager.createRequestRoleIntent(android.app.role.RoleManager.ROLE_HOME),82)
                 } else openHomeSettings()
             } else openHomeSettings()
@@ -264,7 +264,9 @@ class MainActivity : Activity() {
 
     @Deprecated("Legacy document picker callback")
     override fun onActivityResult(requestCode:Int,resultCode:Int,data:Intent?){
-        super.onActivityResult(requestCode,resultCode,data);if(resultCode!=RESULT_OK)return;val uri=data?.data?:return
+        super.onActivityResult(requestCode,resultCode,data)
+        if(requestCode==82){show(if(isHomeRoleHeld()) "launcher" else "permissions");return}
+        if(resultCode!=RESULT_OK)return;val uri=data?.data?:return
         if(requestCode==41){try{contentResolver.takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION)}catch(_:Exception){};chosenUri=uri;prefs.edit().putString("wallpaper_uri",uri.toString()).apply();toast("تم حفظ اختيار الخلفية");show("wallpaper")}
         else if(requestCode==73&&unlocked){try{val bytes=contentResolver.openInputStream(uri)?.use{it.readBytes()}?:byteArrayOf();if(bytes.size>12*1024*1024){toast("حجم الملف أكبر من 12MB");return};vaultItems.put(JSONObject().put("name",uri.lastPathSegment?:"ملف").put("type","ملف مشفر").put("data",Base64.encodeToString(bytes,Base64.NO_WRAP)));saveVault();toast("تم حفظ الملف مشفراً");show("vault")}catch(_:Exception){toast("تعذر قراءة الملف")}}
     }
